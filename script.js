@@ -33,12 +33,75 @@ addAhupuaa();
 addLayers(groupProperty);
 
 
+//adding information
+const soilInfo = {
+  Inceptisols: {
+    controller: "Controller Information - NEED TO GET",
+    information: "Found in semi arid environments (also humid), wide range of characteristics and can be found in different climates",
+    moolelo: "N/A"
+  },
+  Oxisols: {
+    controller: "Controller Information - NEED TO GET",
+    information: "Found in subtropical/tropical regions and is really weathered soil. It has a low natural fertility and has indistinct horizons",
+    moolelo: "N/A"
+  },
+  Ultisols: {
+    controller: "Controller Information - NEED TO GET",
+    information: "Soil is found in humid areas and is formed from weathering and leaching processes. It is acidic",
+    moolelo: "N/A"
+  },
+  Mollisols: {
+    controller: "Controller Information - NEED TO GET",
+    information: "Dark colored surface horizon, relatively high in content of organic matter, also rich and fertile. Good for crops",
+    moolelo: "N/A"
+  },
+  Vertisols: {
+    controller: "Controller Information - NEED TO GET",
+    information: "Has a high content of expanding clay minerals and has cracks that open and close periodically. Water is transmitted very slowly and undergoes very little leaching",
+    moolelo: "N/A"
+  },
+  Entisols: {
+    controller: "Controller Information - NEED TO GET",
+    information: "Shows little to no evidence of pedogenic horizon development and can be found in areas where erosion of deposition rates are faster than the rate of soil development. More mature soils and tend to have a more reddish color ",
+    moolelo: "N/A"
+  },
+  Spodosols: {
+    controller: "Controller Information - NEED TO GET",
+    information: "Formed from weathering processes that strip organic water combined with aluminum from the surface layer",
+    moolelo: "N/A"
+  },
+  Aridisols: {
+    controller: "Controller Information - NEED TO GET",
+    information: "Dry/has low moisture content, commonly found in deserts. It’s too dry for most plants to grow without irrigation. Erosion is more common since it lacks vegetation and has limited organic matter",
+    moolelo: "N/A"
+  },
+  Histosols: {
+    controller: "Controller Information - NEED TO GET",
+    information: "High content of organic matter and very little permafrost. Histosol soil is formed from the decomposed plant remains.",
+    moolelo: "N/A"
+  },
+  Andisols: {
+    controller: "Controller Information - NEED TO GET",
+    information: "Has little crystalline and ordered structure, with a high water and nutrient holding capacity. Also formed from weathering processes. Derived from volcanic ash but are useful for crops",
+    moolelo: "Considered sacred — born of Pele — Andisols connect directly to fire-born land creation."
+  },
+  Unclassified: {
+    controller: "Controller Information",
+    information: "Unclassified soils are not fully surveyed or categorized, often is urban land/lava flows.",
+    moolelo: "N/A"
+  }
+};
+
+
+
+
+
 
 
 
 
 // additions for HTML page (beta) - Jade
-// Wait for page to load
+// Need to wait for page to load
 document.addEventListener('DOMContentLoaded', () => {
   const buttons = document.querySelectorAll('.info-button');
 
@@ -55,8 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
-
-
 
 
 
@@ -166,81 +227,107 @@ async function initializeLayers(url, property){
 function handleLayerChange(event){
     const selectedGroup = event.target.value;
 
-    // add all layers for 'all'
-    if (selectedGroup === 'all'){
-        for (const groupName in groupedLayers){
-            if(!map.hasLayer(groupedLayers[groupName])){
-                groupedLayers[groupName].addTo(map);
-            }
-        }
-    }
-    // remove all layers if not 'all'
-    else {
-        for (const groupName in groupedLayers){
-            if (map.hasLayer(groupedLayers[groupName])){
-                map.removeLayer(groupedLayers[groupName]);
-            }
-        }
+    // Clear map layers
+    for (const groupName in groupedLayers) {
+        map.removeLayer(groupedLayers[groupName]);
     }
 
-    // showing selected layer
-    // if (groupedLayers[selectedGroup] && !map.hasLayer(groupedLayers[selectedGroup])) {
-    //     groupedLayers[selectedGroup].addTo(map);
-    // }
-
-        // showing selected layer
-    if (groupedLayers[selectedGroup] && !map.hasLayer(groupedLayers[selectedGroup])) {
+    // Add only selected layer
+    if (selectedGroup !== 'all' && groupedLayers[selectedGroup]) {
         groupedLayers[selectedGroup].addTo(map);
+    } else {
+        // Add all layers back in
+        for (const groupName in groupedLayers) {
+            groupedLayers[groupName].addTo(map);
+        }
     }
 
-    // Soil Series Buttons Logic
+    // DOM Elements
     const buttonContainer = document.getElementById('soil-series-buttons');
     const contentContainer = document.getElementById('soil-series-content');
     const defaultInfo = document.getElementById('default-info');
 
+    // Reset UI
     buttonContainer.innerHTML = '';
     contentContainer.innerHTML = '';
 
-    if (selectedGroup !== 'all') {
-        const buttons = [
-            {
-                id: 'controller',
-                label: 'Soil Series Controller',
-                content: `Information about how <strong>${selectedGroup}</strong> functions as a soil controller.`
-            },
-            {
-                id: 'information',
-                label: 'Soil Series Information',
-                content: `Scientific info about <strong>${selectedGroup}</strong>'s texture, formation, and classification.`
-            },
-            {
-                id: 'moolelo',
-                label: 'Moʻolelo',
-                content: `Cultural and historical moʻolelo related to <strong>${selectedGroup}</strong>.`
-            }
-        ];
+    // Handle custom soil-series content
+    // if (selectedGroup !== 'all') {
+    //     defaultInfo.style.display = 'none';
+
+    //     const buttons = [
+    //         {
+    //             id: 'controller',
+    //             label: 'Soil Series Controller',
+    //             content: `Information about how <strong>${selectedGroup}</strong> functions as a soil controller.`
+    //         },
+    //         {
+    //             id: 'information',
+    //             label: 'Soil Series Information',
+    //             content: `Scientific info about <strong>${selectedGroup}</strong>'s texture, formation, and classification.`
+    //         },
+    //         {
+    //             id: 'moolelo',
+    //             label: 'Moʻolelo',
+    //             content: `Cultural and historical moʻolelo related to <strong>${selectedGroup}</strong>.`
+    //         }
+    //     ];
+    
+    const content = soilInfo[selectedGroup];
+
+    if (content) {
+
+      const buttons = [
+        {
+            id: 'controller',
+            label: 'Soil Series Controller',
+            content: `<strong>${selectedGroup}</strong>: ${content.controller}`
+        },
+        {
+            id: 'information',
+            label: 'Soil Series Information',
+            content: `<strong>${selectedGroup}</strong>: ${content.information}`
+        },
+        {
+            id: 'moolelo',
+            label: 'Moʻolelo',
+            content: `<strong>${selectedGroup}</strong>: ${content.moolelo}`
+        }
+      ];
+
 
         buttons.forEach(btn => {
+            // Create the button
             const button = document.createElement('div');
             button.className = 'info-button';
             button.textContent = btn.label;
+
+            // Create the content panel
+            const contentBlock = document.createElement('div');
+            contentBlock.className = 'tab-content';
+            contentBlock.innerHTML = `
+              <h4>${btn.label}</h4>
+              <p>${btn.content}</p>
+            `;
+
+            // Toggle logic
             button.addEventListener('click', () => {
-                contentContainer.innerHTML = `
-                    <div class="tab-content open">
-                        <h4>${btn.label}</h4>
-                        <p>${btn.content}</p>
-                    </div>
-                `;
+                const isOpen = contentBlock.classList.contains('open');
+                document.querySelectorAll('#soil-series-content .tab-content').forEach(tab => {
+                    tab.classList.remove('open');
+                });
+                if (!isOpen) {
+                    contentBlock.classList.add('open');
+                }
             });
+
             buttonContainer.appendChild(button);
+            contentContainer.appendChild(contentBlock);
         });
 
-        defaultInfo.style.display = 'none'; // hide default info
     } else {
-        defaultInfo.style.display = 'block'; // show default info
+        defaultInfo.style.display = 'block';
     }
-
-
 }
 
 /* calls initializeLayers for each island and then adds the dropdown selector afterwards
