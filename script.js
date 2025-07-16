@@ -13,13 +13,13 @@ map.getPane('ahupuaaPane').style.zIndex = 500;
 map.createPane('seriesPane');
 map.getPane('seriesPane').style.zIndex = 450;
 
-const urlLanai = 'https://lepolad.github.io/interactive-soil-map/poly_files/lanai_soil_combined.json';
-const urlOahu = 'https://lepolad.github.io/interactive-soil-map/poly_files/oahu_soil_combined.json';
-const urlMolokai = 'https://lepolad.github.io/interactive-soil-map/poly_files/molokai_soil_combined.json';
-const urlMaui = 'https://lepolad.github.io/interactive-soil-map/poly_files/maui_soil_combined.json';
-const urlKauai = 'https://lepolad.github.io/interactive-soil-map/poly_files/kauai_soil_combined.json';
-const urlHawaii = 'https://lepolad.github.io/interactive-soil-map/poly_files/hawaii_soil_combined.json';
-const urlKahoolawe = 'https://lepolad.github.io/interactive-soil-map/poly_files/kahoolawe_soil_combined.json';
+const urlLanai = '/lanai_soil_combined.json';
+const urlOahu = '/oahu_soil_combined.json';
+const urlMolokai = '/molokai_soil_combined.json';
+const urlMaui = '/maui_soil_combined.json';
+const urlKauai = '/kauai_soil_combined.json';
+const urlHawaii = '/hawaii_soil_combined.json';
+const urlKahoolawe = '/kahoolawe_soil_combined.json';
 
 const groupProperty = 'order';
 
