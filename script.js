@@ -347,12 +347,23 @@ async function addLayers(prop){
 
     // adding layer control to dropdown located off of the map
     const dropdown = document.getElementById('dropdown');
-    for(const groupName in groupedLayers){
+    // Clear existing options except the first one
+    while (dropdown.firstChild) {
+        dropdown.removeChild(dropdown.firstChild);
+    }
+    const firstOption = document.createElement('option');
+    firstOption.value = 'all';
+    firstOption.textContent = 'Show All Layers';
+    dropdown.appendChild(firstOption);
+
+    // Add soil type options sorted alphabetically
+    const soilTypes = Object.keys(groupedLayers).sort();
+    soilTypes.forEach(groupName => {
         const option = document.createElement('option');
         option.value = groupName;
         option.textContent = groupName;
-        dropdown.appendChild(option);  
-    }
+        dropdown.appendChild(option);
+    });
 
     dropdown.addEventListener('change', handleLayerChange);
 }
