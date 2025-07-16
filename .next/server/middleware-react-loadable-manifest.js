@@ -1,0 +1,1 @@
+self.__REACT_LOADABLE_MANIFEST="{\"pages/index.js -> ../components/SoilMap\":{\"id\":\"pages/index.js -> ../components/SoilMap\",\"files\":[\"static/chunks/src_components_SoilMap_js.js\"]}}"
