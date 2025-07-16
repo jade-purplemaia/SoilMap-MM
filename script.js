@@ -1,316 +1,312 @@
-// beginning map for soil interactive map
+// Check if script is loaded
+console.log('Script loaded successfully');
 
-// create base map using esri satellite imagery
-const map = L.map('map').setView([20.8247, -156.919409], 8);
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+// Constants and configuration
+const mapConfig = {
+    center: [20.8247, -156.919409],
+    zoom: 8,
+    tileLayer: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-}).addTo(map);
-
-// set ahupuaa and soil series as separate panes to set ahupuaa lines higher in z-axis so they always appear over soil polygons
-map.createPane('ahupuaaPane');
-map.getPane('ahupuaaPane').style.zIndex = 500;
-
-map.createPane('seriesPane');
-map.getPane('seriesPane').style.zIndex = 450;
-
-const urlLanai = '/lanai_soil_combined.json';
-const urlOahu = '/oahu_soil_combined.json';
-const urlMolokai = '/molokai_soil_combined.json';
-const urlMaui = '/maui_soil_combined.json';
-const urlKauai = '/kauai_soil_combined.json';
-const urlHawaii = '/hawaii_soil_combined.json';
-const urlKahoolawe = '/kahoolawe_soil_combined.json';
-
-const groupProperty = 'order';
-
-const groupedLayers = {};
-
-// adding ahupuaa to the map
-// uses data from here: https://geoportal.hawaii.gov/datasets/HiStateGIS::ahupuaa/about
-addAhupuaa();
-
-// adds soil polygon layers to the map, calling all the other functions below
-addLayers(groupProperty);
-
-
-//adding information
-const soilInfo = {
-  Inceptisols: {
-    controller: "Controller Information - NEED TO GET",
-    information: "Found in semi arid environments (also humid), wide range of characteristics and can be found in different climates",
-    moolelo: "N/A"
-  },
-  Oxisols: {
-    controller: "Controller Information - NEED TO GET",
-    information: "Found in subtropical/tropical regions and is really weathered soil. It has a low natural fertility and has indistinct horizons",
-    moolelo: "N/A"
-  },
-  Ultisols: {
-    controller: "Controller Information - NEED TO GET",
-    information: "Soil is found in humid areas and is formed from weathering and leaching processes. It is acidic",
-    moolelo: "N/A"
-  },
-  Mollisols: {
-    controller: "Controller Information - NEED TO GET",
-    information: "Dark colored surface horizon, relatively high in content of organic matter, also rich and fertile. Good for crops",
-    moolelo: "N/A"
-  },
-  Vertisols: {
-    controller: "Controller Information - NEED TO GET",
-    information: "Has a high content of expanding clay minerals and has cracks that open and close periodically. Water is transmitted very slowly and undergoes very little leaching",
-    moolelo: "N/A"
-  },
-  Entisols: {
-    controller: "Controller Information - NEED TO GET",
-    information: "Shows little to no evidence of pedogenic horizon development and can be found in areas where erosion of deposition rates are faster than the rate of soil development. More mature soils and tend to have a more reddish color ",
-    moolelo: "N/A"
-  },
-  Spodosols: {
-    controller: "Controller Information - NEED TO GET",
-    information: "Formed from weathering processes that strip organic water combined with aluminum from the surface layer",
-    moolelo: "N/A"
-  },
-  Aridisols: {
-    controller: "Controller Information - NEED TO GET",
-    information: "Dry/has low moisture content, commonly found in deserts. It’s too dry for most plants to grow without irrigation. Erosion is more common since it lacks vegetation and has limited organic matter",
-    moolelo: "N/A"
-  },
-  Histosols: {
-    controller: "Controller Information - NEED TO GET",
-    information: "High content of organic matter and very little permafrost. Histosol soil is formed from the decomposed plant remains.",
-    moolelo: "N/A"
-  },
-  Andisols: {
-    controller: "Controller Information - NEED TO GET",
-    information: "Has little crystalline and ordered structure, with a high water and nutrient holding capacity. Also formed from weathering processes. Derived from volcanic ash but are useful for crops",
-    moolelo: "Considered sacred — born of Pele — Andisols connect directly to fire-born land creation."
-  },
-  Unclassified: {
-    controller: "Controller Information",
-    information: "Unclassified soils are not fully surveyed or categorized, often is urban land/lava flows.",
-    moolelo: "N/A"
-  }
 };
 
+// URL constants for GeoJSON files
+const islandUrls = {
+    lanai: '/geojson/lanai_soil_combined.json',
+    oahu: '/geojson/oahu_soil_combined.json',
+    molokai: '/geojson/molokai_soil_combined.json',
+    maui: '/geojson/maui_soil_combined.json',
+    kauai: '/geojson/kauai_soil_combined.json',
+    hawaii: '/geojson/hawaii_soil_combined.json',
+    kahoolawe: '/geojson/kahoolawe_soil_combined.json'
+};
 
+// Soil type definitions
+const soilInfo = {
+    Inceptisols: {
+        controller: "Controller Information - NEED TO GET",
+        information: "Found in semi arid environments (also humid), wide range of characteristics and can be found in different climates",
+        moolelo: "N/A"
+    },
+    Oxisols: {
+        controller: "Controller Information - NEED TO GET",
+        information: "Found in subtropical/tropical regions and is really weathered soil. It has a low natural fertility and has indistinct horizons",
+        moolelo: "N/A"
+    },
+    Ultisols: {
+        controller: "Controller Information - NEED TO GET",
+        information: "Soil is found in humid areas and is formed from weathering and leaching processes. It is acidic",
+        moolelo: "N/A"
+    },
+    Mollisols: {
+        controller: "Controller Information - NEED TO GET",
+        information: "Dark colored surface horizon, relatively high in content of organic matter, also rich and fertile. Good for crops",
+        moolelo: "N/A"
+    },
+    Vertisols: {
+        controller: "Controller Information - NEED TO GET",
+        information: "Has a high content of expanding clay minerals and has cracks that open and close periodically. Water is transmitted very slowly and undergoes very little leaching",
+        moolelo: "N/A"
+    },
+    Entisols: {
+        controller: "Controller Information - NEED TO GET",
+        information: "Shows little to no evidence of pedogenic horizon development and can be found in areas where erosion of deposition rates are faster than the rate of soil development. More mature soils and tend to have a more reddish color ",
+        moolelo: "N/A"
+    },
+    Spodosols: {
+        controller: "Controller Information - NEED TO GET",
+        information: "Formed from weathering processes that strip organic water combined with aluminum from the surface layer",
+        moolelo: "N/A"
+    },
+    Aridisols: {
+        controller: "Controller Information - NEED TO GET",
+        information: "Dry/has low moisture content, commonly found in deserts. It’s too dry for most plants to grow without irrigation. Erosion is more common since it lacks vegetation and has limited organic matter",
+        moolelo: "N/A"
+    },
+    Histosols: {
+        controller: "Controller Information - NEED TO GET",
+        information: "High content of organic matter and very little permafrost. Histosol soil is formed from the decomposed plant remains.",
+        moolelo: "N/A"
+    },
+    Andisols: {
+        controller: "Controller Information",
+        information: "Has little crystalline and ordered structure, with a high water and nutrient holding capacity. Also formed from weathering processes. Derived from volcanic ash but are useful for crops",
+        moolelo: "Considered sacred — born of Pele — Andisols connect directly to fire-born land creation."
+    },
+    Unclassified: {
+        controller: "Controller Information",
+        information: "Unclassified soils are not fully surveyed or categorized, often is urban land/lava flows.",
+        moolelo: "N/A"
+    }
+};
 
+console.log('Soil Info object:', soilInfo);
+console.log('Available soil types:', Object.keys(soilInfo));
 
+// Global variables
+const groupProperty = 'order';
+let map; // Declare map as global variable
+const groupedLayers = {};
 
+// Function to initialize map and populate dropdown
+async function initializeMapAndDropdown() {
+    console.log('Starting map and dropdown initialization');
 
+    try {
+        // Verify sidebar exists
+        const sidebar = document.querySelector('#sidebar');
+        if (!sidebar) {
+            console.error('Critical error: Sidebar element not found in DOM');
+            return;
+        }
+        console.log('Sidebar found in DOM');
 
+        // Create map
+        map = L.map('map').setView(mapConfig.center, mapConfig.zoom);
+        L.tileLayer(mapConfig.tileLayer, { attribution: mapConfig.attribution }).addTo(map);
+        console.log('Map created and base layer added');
 
+        // Set up panes
+        map.createPane('ahupuaaPane');
+        map.getPane('ahupuaaPane').style.zIndex = 500;
+        map.createPane('seriesPane');
+        map.getPane('seriesPane').style.zIndex = 450;
+        console.log('Map panes created');
 
-// additions for HTML page (beta) - Jade
-// Need to wait for page to load
-document.addEventListener('DOMContentLoaded', () => {
-  const buttons = document.querySelectorAll('.info-button');
+        // Initialize soil layers for all islands
+        for (const island in islandUrls) {
+            console.log(`Loading data for ${island}`);
+            await initializeLayers(islandUrls[island], groupProperty);
+        }
+        console.log('All island layers loaded');
 
-  buttons.forEach(button => {
-    button.addEventListener('click', () => {
-      const tabId = button.getAttribute('data-tab');
-      const tab = document.getElementById(tabId);
+        // Add ahupuaa layer
+        await addAhupuaa();
+        console.log('Ahupuaa layer added');
 
-      if (tab.classList.contains('open')) {
-        tab.classList.remove('open');
-      } else {
-        tab.classList.add('open');
-      }
-    });
-  });
-});
+        // Populate dropdown
+        const dropdown = document.getElementById('soil-type');
+        if (!dropdown) {
+            console.error('Critical error: Dropdown element not found in DOM');
+            return;
+        }
+        console.log('Found dropdown element, starting to populate');
 
+        // Clear existing options
+        dropdown.innerHTML = ''; // Clear all options
 
+        // Add "All" option
+        const firstOption = document.createElement('option');
+        firstOption.value = 'all';
+        firstOption.textContent = 'Show All Layers';
+        firstOption.selected = true;
+        dropdown.appendChild(firstOption);
+        console.log('Added "All" option to dropdown');
 
-// FUNCTION SECTION
+        // Add soil types from soilInfo
+        const soilTypes = Object.keys(soilInfo).sort();
+        console.log('Available soil types in soilInfo:', soilTypes);
+        
+        // Add options directly
+        soilTypes.forEach(soilType => {
+            dropdown.innerHTML += `<option value="${soilType}">${soilType}</option>`;
+            console.log(`Added soil type to dropdown: ${soilType}`);
+        });
 
+        // Add event listener
+        dropdown.addEventListener('change', handleLayerChange);
+        console.log('Dropdown event listener added');
 
-// maps colors to soil orders to color them together
-function getColor(order) {
-    switch (order) {
-        case 'Inceptisols': return 'blue';
-        case 'Oxisols': return 'red';
-        case 'Ultisols': return 'purple';
-        case 'Mollisols': return '#E0218A';
-        case 'Vertisols': return 'orange';
-        case 'Entisols': return '#e0da21';
-        case 'Spodosols': return 'cyan';
-        case 'Aridisols': return 'brown';
-        case 'Histosols': return 'greenyellow';
-        case 'Andisols': return 'darkslateblue'
-        case 'Undefined': return 'white';
-        default: return 'white';
+        // Verify options were added
+        const options = dropdown.querySelectorAll('option');
+        console.log('Final number of options:', options.length);
+        options.forEach(opt => {
+            console.log(`Option value: ${opt.value}, text: ${opt.textContent}`);
+        });
+
+        console.log('Map and dropdown initialized successfully');
+    } catch (error) {
+        console.error('Error during initialization:', error);
+        throw error;
     }
 }
-;
 
-// function for retrieve data and group polygons by a given property
-async function getAndGroupData(url, property){
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded event triggered');
+    initializeMapAndDropdown();
+});
 
-    try{
+// Function to get color for soil orders
+function getColor(order) {
+    const colors = {
+        Inceptisols: 'blue',
+        Oxisols: 'red',
+        Ultisols: 'purple',
+        Mollisols: '#E0218A',
+        Vertisols: 'orange',
+        Entisols: '#e0da21',
+        Spodosols: 'cyan',
+        Aridisols: 'brown',
+        Histosols: 'greenyellow',
+        Andisols: 'darkslateblue',
+        Undefined: 'white'
+    };
+    return colors[order] || 'white';
+}
+
+// Function for retrieving and grouping data
+async function getAndGroupData(url, property) {
+    try {
+        console.log(`Loading data from ${url}`);
         const response = await fetch(url);
-        if(!response.ok){
-            throw new Error(`Stay all hammajang my dawg, ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`Error loading ${url}: ${response.status}`);
         }
 
         const data = await response.json();
+        console.log(`Loaded ${data.features.length} features`);
 
-        // looping through each polygon in the data and grouping by the given property (soil order or soil series)
-        // feature here refers to individual polygons from the json data object
+        const foundSoilTypes = new Set();
+        const invalidFeatures = [];
+
         data.features.forEach(feature => {
             const groupName = feature.properties[property];
+            if (groupName) {
+                foundSoilTypes.add(groupName);
+            } else {
+                invalidFeatures.push(feature.properties);
+            }
 
-            // make new group if no exist
-            if(!groupedLayers[groupName]){
+            if (!groupedLayers[groupName]) {
                 groupedLayers[groupName] = L.featureGroup();
             }
 
-            // turning each feature into a leaflet polygon so it can be added to the map
-            if(typeof feature === 'object' && feature !== null && feature.type === 'Feature' && feature.geometry){
-                try{
-                    const polygon = L.geoJSON(feature,
-                        {style: (feature) => {
-                            try{
-                                const prop = feature.properties[property];
-                                return{
-                                    fillColor: getColor(prop), // color the polygons by soil order or soil series
-                                    color: getColor(prop),
-                                    weight: 1,
-                                    fillOpacity: 0.5
-                                }
-                            }
-                            // polygons with errors shown in black to highlight them for us to fix
-                            catch (error){
-                                console.error('style function stay hammajang', error)
-                                return{
-                                    fillColor: 'black',
-                                    color: 'black',
-                                    weight: 1,
-                                    fillOpacity: 1
-                                }
-                            }
-                           
-                           
-                         },
+            if (feature.type === 'Feature' && feature.geometry) {
+                try {
+                    const polygon = L.geoJSON(feature, {
+                        style: feature => ({
+                            fillColor: getColor(feature.properties[property]),
+                            color: getColor(feature.properties[property]),
+                            weight: 1,
+                            fillOpacity: 0.5
+                        }),
                         pane: 'seriesPane'
-                        }
-                    )    
-                //    make polygons display the property when clicked
-                   polygon.bindPopup(feature.properties['series']);
-                //    add individual polygon to group
-                   polygon.addTo(groupedLayers[groupName]);
-                }
-                catch (error){
-                    console.error('stay all jam up trying for make L.GeoJSON', error, feature);
+                    });
+                    polygon.bindPopup(feature.properties['series']);
+                    polygon.addTo(groupedLayers[groupName]);
+                } catch (error) {
+                    console.error('Error creating polygon:', error);
+                    invalidFeatures.push(feature.properties);
                 }
             }
-            
         });
 
-    }
-    catch(error){
-        console.error(`something stay more broken than your teeth on ${url}, error: `, error);    
+        console.log(`Found ${foundSoilTypes.size} unique soil types`);
+        if (invalidFeatures.length > 0) {
+            console.warn(`Found ${invalidFeatures.length} invalid features`);
+        }
+
+    } catch (error) {
+        console.error('Error processing data:', error);
+        throw error;
     }
 }
 
-// adds the layers and layer groups to the map
-// stuff comes all kapakahi if no more seperate async function with await for getAndGroupData
-async function initializeLayers(url, property){
+// Function to initialize layers
+async function initializeLayers(url, property) {
     await getAndGroupData(url, property);
-
-    // adding layer groups to map
-    for(const groupName in groupedLayers){
+    for (const groupName in groupedLayers) {
         groupedLayers[groupName].addTo(map);
     }
 }
 
-// adjusts layers on map based on layer selector
-function handleLayerChange(event){
+// Function to handle layer changes
+function handleLayerChange(event) {
+    console.log('Dropdown change event triggered');
     const selectedGroup = event.target.value;
-
-    // Clear map layers
+    
+    // Toggle layers
     for (const groupName in groupedLayers) {
         map.removeLayer(groupedLayers[groupName]);
     }
-
-    // Add only selected layer
+    
     if (selectedGroup !== 'all' && groupedLayers[selectedGroup]) {
         groupedLayers[selectedGroup].addTo(map);
     } else {
-        // Add all layers back in
         for (const groupName in groupedLayers) {
             groupedLayers[groupName].addTo(map);
         }
     }
 
-    // DOM Elements
+    // Update UI
     const buttonContainer = document.getElementById('soil-series-buttons');
     const contentContainer = document.getElementById('soil-series-content');
     const defaultInfo = document.getElementById('default-info');
 
-    // Reset UI
     buttonContainer.innerHTML = '';
     contentContainer.innerHTML = '';
 
-    // Handle custom soil-series content
-    // if (selectedGroup !== 'all') {
-    //     defaultInfo.style.display = 'none';
-
-    //     const buttons = [
-    //         {
-    //             id: 'controller',
-    //             label: 'Soil Series Controller',
-    //             content: `Information about how <strong>${selectedGroup}</strong> functions as a soil controller.`
-    //         },
-    //         {
-    //             id: 'information',
-    //             label: 'Soil Series Information',
-    //             content: `Scientific info about <strong>${selectedGroup}</strong>'s texture, formation, and classification.`
-    //         },
-    //         {
-    //             id: 'moolelo',
-    //             label: 'Moʻolelo',
-    //             content: `Cultural and historical moʻolelo related to <strong>${selectedGroup}</strong>.`
-    //         }
-    //     ];
-    
     const content = soilInfo[selectedGroup];
-
     if (content) {
-
-      const buttons = [
-        {
-            id: 'controller',
-            label: 'Soil Series Controller',
-            content: `<strong>${selectedGroup}</strong>: ${content.controller}`
-        },
-        {
-            id: 'information',
-            label: 'Soil Series Information',
-            content: `<strong>${selectedGroup}</strong>: ${content.information}`
-        },
-        {
-            id: 'moolelo',
-            label: 'Moʻolelo',
-            content: `<strong>${selectedGroup}</strong>: ${content.moolelo}`
-        }
-      ];
-
+        defaultInfo.style.display = 'none';
+        const buttons = [
+            { id: 'controller', label: 'Soil Series Controller', content: content.controller },
+            { id: 'information', label: 'Soil Series Information', content: content.information },
+            { id: 'moolelo', label: 'Moʻolelo', content: content.moolelo }
+        ];
 
         buttons.forEach(btn => {
-            // Create the button
             const button = document.createElement('div');
             button.className = 'info-button';
             button.textContent = btn.label;
 
-            // Create the content panel
             const contentBlock = document.createElement('div');
             contentBlock.className = 'tab-content';
             contentBlock.innerHTML = `
-              <h4>${btn.label}</h4>
-              <p>${btn.content}</p>
+                <h4>${btn.label}</h4>
+                <p><strong>${selectedGroup}</strong>: ${btn.content}</p>
             `;
 
-            // Toggle logic
             button.addEventListener('click', () => {
                 const isOpen = contentBlock.classList.contains('open');
                 document.querySelectorAll('#soil-series-content .tab-content').forEach(tab => {
@@ -324,83 +320,25 @@ function handleLayerChange(event){
             buttonContainer.appendChild(button);
             contentContainer.appendChild(contentBlock);
         });
-
     } else {
         defaultInfo.style.display = 'block';
     }
 }
 
-/* calls initializeLayers for each island and then adds the dropdown selector afterwards
-I went make it this way so that the dropdown has all of the orders on it and doesn't add
-any soil orders to it multiple times.
-I also tried having it loop through a list of the urls but that went broke instantly
-*/
-async function addLayers(prop){
-    await initializeLayers(urlLanai, prop);
-    await initializeLayers(urlOahu, prop);
-    await initializeLayers(urlMolokai, prop);
-    await initializeLayers(urlMaui, prop);
-    await initializeLayers(urlKauai, prop);
-    await initializeLayers(urlHawaii, prop);
-    await initializeLayers(urlKahoolawe, prop);
-
-
-    // adding layer control to dropdown located off of the map
-    const dropdown = document.getElementById('dropdown');
-    // Clear existing options except the first one
-    while (dropdown.firstChild) {
-        dropdown.removeChild(dropdown.firstChild);
-    }
-    const firstOption = document.createElement('option');
-    firstOption.value = 'all';
-    firstOption.textContent = 'Show All Layers';
-    dropdown.appendChild(firstOption);
-
-    // Add soil type options sorted alphabetically
-    const soilTypes = Object.keys(groupedLayers).sort();
-    soilTypes.forEach(groupName => {
-        const option = document.createElement('option');
-        option.value = groupName;
-        option.textContent = groupName;
-        dropdown.appendChild(option);
-    });
-
-    dropdown.addEventListener('change', handleLayerChange);
-}
-
-
-// adds ahupuaa layer to map, sets them on upper pane and non-interactive so they no interfere with soil series polygons
-async function addAhupuaa(){
-    const url = 'https://geodata.hawaii.gov/arcgis/rest/services/HistoricCultural/MapServer/1/query?outFields=*&where=1%3D1&f=geojson'
-
-    try{
+// Function to add ahupuaa layer
+async function addAhupuaa() {
+    try {
+        const url = 'https://geodata.hawaii.gov/arcgis/rest/services/HistoricCultural/MapServer/1/query?outFields=*&where=1%3D1&f=geojson';
         const response = await fetch(url);
-        if(!response.ok){
-            throw new Error(`Ahupuaa stay buss up, something wrong ${response.status}`);
-        }
-
         const data = await response.json();
         
-        data.features.forEach(feature => {
-             // turning each feature into a leaflet polygon so it can be added to the map
-            if(typeof feature === 'object' && feature !== null && feature.type === 'Feature' && feature.geometry){
-                try{
-                    const polygon = L.geoJSON(feature,
-                        {
-                            style: {'color': "black", 'weight': 1, 'fill':false},
-                            pane: 'ahupuaaPane',
-                            interactive:false
-                        }
-                    )
-                    polygon.addTo(map);
-                }
-                catch(error){
-                    console.error('Brah your ahupuaa polygons stay messed up', error);
-                }
-            }
-        })
-    }
-    catch(error){
-        console.error('You gotta get it together brah', error);
+        const ahupuaaLayer = L.geoJSON(data, {
+            style: { color: 'black', weight: 2 },
+            pane: 'ahupuaaPane'
+        });
+        
+        ahupuaaLayer.addTo(map);
+    } catch (error) {
+        console.error('Error adding ahupuaa layer:', error);
     }
 }
